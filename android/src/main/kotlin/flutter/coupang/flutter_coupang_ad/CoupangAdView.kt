@@ -17,7 +17,7 @@ import org.json.JSONObject
 
 
 @SuppressLint("SetJavaScriptEnabled")
-class CoupangAdView(private val context: Context, messenger: BinaryMessenger?, viewId: Int, arguments: Any)
+class CoupangAdView(private val context: Context, messenger: BinaryMessenger, viewId: Int, arguments: Any)
     : PlatformView, EventChannel.StreamHandler, MethodCallHandler, AdListener {
     private var webView: CoupangAdWebView? = null
     private var nativeView: CoupangAdNativeView? = null
@@ -121,14 +121,21 @@ class CoupangAdView(private val context: Context, messenger: BinaryMessenger?, v
         eventSink?.success(data)
     }
 
-    override fun getView(): View {
-        return nativeView ?: webView ?: RelativeLayout(context)
-    }
+override fun getView(): View {
+    if (nativeView != null) return nativeView!!
+    if (webView != null) return webView!!
+    
+    Log.w("CoupangAdView", "Both nativeView and webView are null, returning empty layout.")
+    return RelativeLayout(context)
+}
 
-    override fun dispose() {
-        webView?.dispose()
-        methodChannel?.setMethodCallHandler(null)
-    }
+override fun dispose() {
+    webView?.dispose()
+    webView = null
+    nativeView = null
+    methodChannel?.setMethodCallHandler(null)
+    eventSink = null
+}
 
     override fun onListen(arguments: Any?, events: EventSink?) {
         eventSink = events
